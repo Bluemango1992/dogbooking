@@ -1,0 +1,19 @@
+{
+  "name": "dogbooking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.0",
+    "googleapis": "^105.0.0",
+    "moment-timezone": "^0.5.45",
+    "open": "^10.1.0"
+  }
+}

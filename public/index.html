@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dog Service Form</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Styles for the color swatch */
+    .color-swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-left: 10px;
+      vertical-align: middle;
+      border-radius: 2px;
+      border: 1px solid #000;
+    }
+    /* Define colors corresponding to colorIds */
+    .color-1 { background-color: #a4bdfc; } /* Lavender */
+    .color-2 { background-color: #7ae7bf; } /* Sage */
+    .color-3 { background-color: #dbadff; } /* Grape */
+    .color-9 { background-color: #5484ed; } /* Blueberry (Default) */
+  </style>
+</head>
+<body>
+  <h1>Schedule Dog Service</h1>
+  <form id="dogServiceForm">
+    <label for="dogName">Dog's Name:</label>
+    <input type="text" id="dogName" name="dogName" required><br><br>
+
+    <label for="pickUpTime">Pick-Up Time:</label>
+    <input type="datetime-local" id="pickUpTime" name="pickUpTime" required><br><br>
+
+    <label for="dropOffTime">Drop-Off Time:</label>
+    <input type="datetime-local" id="dropOffTime" name="dropOffTime" required><br><br>
+
+    <label for="serviceType">Service Type:</label>
+    <select id="serviceType" name="serviceType" required>
+      <option value="Day Care">Day Care</option>
+      <option value="Walk">Walk</option>
+      <option value="Boarding">Boarding</option>
+      <!-- Add more service types as needed -->
+    </select>
+    <span id="serviceColor" class="color-swatch color-1"></span><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    const SERVICE_TYPE_COLORS = {
+      "Day Care": "color-1",   // Lavender
+      "Walk": "color-2",       // Sage
+      "Boarding": "color-3",   // Grape
+      // Add more service types and their corresponding CSS classes as needed
+    };
+
+    const serviceTypeSelect = document.getElementById('serviceType');
+    const serviceColorSpan = document.getElementById('serviceColor');
+
+    // Function to update the color swatch based on selected service type
+    function updateServiceColor() {
+      const selectedService = serviceTypeSelect.value;
+      const colorClass = SERVICE_TYPE_COLORS[selectedService] || 'color-9'; // Default color
+      serviceColorSpan.className = `color-swatch ${colorClass}`;
+    }
+
+    // Initialize the color swatch on page load
+    updateServiceColor();
+
+    // Update the color swatch whenever the service type changes
+    serviceTypeSelect.addEventListener('change', updateServiceColor);
+
+    document.getElementById('dogServiceForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+
+      // Convert datetime-local to ISO string (UTC)
+      const pickUpTime = new Date(data.pickUpTime).toISOString();
+      const dropOffTime = new Date(data.dropOffTime).toISOString();
+
+      const requestData = {
+        dogName: data.dogName,
+        pickUpTime: pickUpTime,
+        dropOffTime: dropOffTime,
+        serviceType: data.serviceType
+      };
+
+      console.log('Request data:', requestData);
+
+      try {
+        const response = await fetch('/api/createDogEvent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (response.status === 401) {
+          const result = await response.json();
+          if (result.authorizeUrl) {
+            // Redirect the user to the authorization URL
+            window.location.href = result.authorizeUrl;
+            return;
+          }
+        }
+
+        const result = await response.json();
+        console.log('Response data:', result);
+        alert(result.message);
+
+        if (result.eventLink) {
+          // Open the event link in a new tab
+          window.open(result.eventLink, '_blank');
+        }
+      } catch (error) {
+        console.error('Error creating event:', error);
+        alert('An error occurred while creating the event.');
+      }
+    });
+  </script>  
+
+</body>
+</html>
